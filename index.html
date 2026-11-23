@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Książka nadawcza">
+<title>Książka nadawcza</title>
+<style>
+:root{
+  --navy:#1f3a5f; --navy2:#2c4f7c; --bg:#f4f5f7; --card:#fff; --line:#dde1e7;
+  --text:#1d232b; --muted:#6b7480; --accent:#c8862a; --danger:#b3261e; --ok:#2e7d32;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header.top{background:var(--navy);color:#fff;padding:14px 20px 0;position:sticky;top:0;z-index:20}
+header.top h1{margin:0 0 10px;font-size:18px;font-weight:600;letter-spacing:.2px}
+header.top h1 small{font-weight:400;opacity:.7;margin-left:8px;font-size:13px}
+nav.tabs{display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{background:transparent;border:0;color:#cfd8e3;padding:9px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+nav.tabs button.active{background:var(--bg);color:var(--navy);font-weight:600}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 80px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 auto}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+h2{font-size:16px;margin:0 0 12px}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
+label.f input,label.f select,label.f textarea{font-size:15px;color:var(--text)}
+input[type=text],input[type=date],input[type=number],input[type=search],select,textarea{
+  border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;min-width:0}
+input:focus,select:focus,textarea:focus{outline:2px solid #9db7d8;border-color:#9db7d8}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;cursor:pointer}
+.btn:hover{background:#f0f2f5}
+.btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn.primary:hover{background:var(--navy2)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:4px 9px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.chip{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:20px;background:#e8edf4;color:var(--navy);margin-right:4px}
+.chip.zpo{background:#fdf0dc;color:#8a5a12}
+.chip.p{background:#e3f1e4;color:#22632a}
+
+/* search */
+.search-wrap{position:relative}
+.search-wrap input{width:100%;font-size:16px;padding:12px 14px}
+.dropdown{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;max-height:360px;overflow:auto}
+.dropdown .opt{padding:9px 14px;cursor:pointer;border-bottom:1px solid #f0f1f3}
+.dropdown .opt:last-child{border-bottom:0}
+.dropdown .opt.hl,.dropdown .opt:hover{background:#eef3fa}
+.dropdown .opt b{font-weight:600}
+.dropdown .opt .addr{font-size:13px;color:var(--muted)}
+.dropdown .opt.new{color:var(--navy);font-weight:600}
+
+/* items */
+.items{display:flex;flex-direction:column;gap:8px}
+.item{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;display:grid;
+  grid-template-columns:34px 1fr auto;gap:10px;align-items:start;background:#fff}
+.item .lp{font-weight:700;color:var(--navy);padding-top:2px}
+.item .who b{display:block}
+.item .who .addr{font-size:13px;color:var(--muted)}
+.item .ctl{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.item .ctl label{font-size:13px;display:flex;gap:4px;align-items:center;cursor:pointer;user-select:none}
+.item .extra{grid-column:2 / 4;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.item .extra input{width:100%;padding:6px 8px;font-size:14px}
+.item.pagebreak{border-top:3px solid var(--accent)}
+.empty{padding:26px;text-align:center;color:var(--muted)}
+
+table.list{width:100%;border-collapse:collapse}
+table.list th,table.list td{text-align:left;padding:8px 8px;border-bottom:1px solid #eef0f3;vertical-align:top}
+table.list th{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+table.list tr:hover td{background:#fafbfc}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,25,40,.45);display:flex;align-items:flex-start;justify-content:center;
+  padding:40px 12px;z-index:50;overflow:auto}
+.modal{background:#fff;border-radius:14px;max-width:560px;width:100%;padding:20px}
+.modal h3{margin:0 0 14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid2 .full{grid-column:1/3}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1d232b;color:#fff;padding:10px 18px;border-radius:30px;
+  z-index:60;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+.sumbar{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.sumbar b{color:var(--text)}
+@media (max-width:640px){
+  .item{grid-template-columns:26px 1fr}
+  .item .ctl{grid-column:1/3;justify-content:flex-start}
+  .item .extra{grid-column:1/3}
+  .grid2{grid-template-columns:1fr}
+  .grid2 .full{grid-column:1}
+}
+
+/* ============ PRINT: układ 1:1 z książką nadawczą ============ */
+#print{display:none}
+@media print{
+  @page{size:A4 landscape;margin:8mm 9mm}
+  html,body{background:#fff}
+  header.top,main,.toast,.modal-bg{display:none !important}
+  #print{display:block}
+  .pp{page-break-after:always;break-after:page;font-family:Arial,Helvetica,sans-serif;color:#000}
+  .pp:last-child{page-break-after:auto;break-after:auto}
+}
+.pp{height:193mm;overflow:hidden}
+.pp .head{display:flex;justify-content:space-between;align-items:flex-end;height:9mm;margin-bottom:2.5mm}
+.pp .head .snd{font-size:8.5pt;font-weight:700;width:48%}
+.pp .head .umowa{font-size:8.5pt;font-weight:700;text-align:center;width:42%}
+.pp table{width:100%;border-collapse:collapse;table-layout:fixed}
+.pp td,.pp th{border:0.8pt solid #000;padding:0.6mm 1mm;font-size:7.5pt;text-align:center;vertical-align:middle;overflow:hidden}
+.pp th{font-weight:700}
+.pp thead tr.h1 th{height:15mm}
+.pp thead tr.h2 th{height:4.5mm}
+.pp thead tr.h3 th{height:4mm}
+.pp tbody tr{height:13.2mm}
+.pp tbody td{height:13.2mm;max-height:13.2mm;line-height:1.2}
+.pp tbody td.adr{font-size:8pt;line-height:1.25}
+.pp tbody td.adr .n2{font-size:7.5pt}
+.pp tbody td.adr .sg{font-size:6.5pt;color:#333}
+.pp tbody td.dst{font-size:8pt;line-height:1.25}
+.pp tfoot td{height:10mm;font-weight:700;font-size:7.5pt}
+.pp tfoot td.lbl{text-align:left}
+.pp tfoot td.lbl span{float:right;padding-right:18mm}
+.pp tfoot td.nb{border:0}
+.pp .pgno{font-size:7pt;text-align:right;margin-top:1mm}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Książka nadawcza <small id="hdrSender"></small></h1>
+  <nav class="tabs">
+    <button data-tab="nadaj" class="active">Nadaj</button>
+    <button data-tab="adresy">Książka adresowa</button>
+    <button data-tab="historia">Historia</button>
+    <button data-tab="ustawienia">Ustawienia</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ========== NADAJ ========== -->
+  <section id="tab-nadaj">
+    <div class="card">
+      <div class="row" style="margin-bottom:12px">
+        <label class="f">Data nadania<input type="date" id="batchDate"></label>
+        <div class="grow"></div>
+        <div class="sumbar" id="batchSum"></div>
+      </div>
+      <div class="search-wrap">
+        <input type="search" id="q" placeholder="Wpisz adresata: sąd, komornik, klient…  (Enter = dodaj)" autocomplete="off">
+        <div class="dropdown" id="dd" hidden></div>
+      </div>
+      <div class="row small muted" style="margin-top:8px">
+        <span>Domyślny rodzaj nowej pozycji:</span>
+        <label style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="defZpo"> ZPO</label>
+        <label style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="defP"> Priorytet</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <h2 style="margin:0">Bieżąca partia</h2>
+        <div class="grow"></div>
+        <button class="btn" id="btnClear">Wyczyść</button>
+        <button class="btn primary" id="btnPrint">Drukuj książkę</button>
+        <button class="btn accent" id="btnClose" title="Zapisz w historii i zacznij nową partię">Zamknij partię</button>
+      </div>
+      <div class="items" id="items"></div>
+    </div>
+  </section>
+
+  <!-- ========== ADRESY ========== -->
+  <section id="tab-adresy" hidden>
+    <div class="card">
+      <div class="row">
+        <input type="search" id="abQ" class="grow" placeholder="Szukaj w książce adresowej…">
+        <select id="abCat"><option value="">Wszystkie kategorie</option></select>
+        <button class="btn primary" id="abNew">+ Nowy adresat</button>
+      </div>
+    </div>
+    <div class="card" style="padding:4px 8px">
+      <table class="list"><thead><tr><th>Adresat</th><th>Adres</th><th>Kategoria</th><th>Użyć</th><th></th></tr></thead>
+      <tbody id="abList"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ========== HISTORIA ========== -->
+  <section id="tab-historia" hidden>
+    <div class="card">
+      <input type="search" id="hQ" style="width:100%" placeholder="Szukaj: adresat, sygnatura, nr nadawczy…">
+    </div>
+    <div id="hList"></div>
+  </section>
+
+  <!-- ========== USTAWIENIA ========== -->
+  <section id="tab-ustawienia" hidden>
+    <div class="card">
+      <h2>Nagłówek książki</h2>
+      <div class="grid2">
+        <label class="f full">Nadawca (lewy górny róg)<input type="text" id="sSender"></label>
+        <label class="f full">Tekst po prawej (np. „Opłata pobrana, umowa nr … z dnia …”) — zostaw puste, jeśli nie masz umowy<input type="text" id="sContract"></label>
+        <label class="f full" style="flex-direction:row;gap:8px;align-items:center;color:var(--text);font-size:14px">
+          <input type="checkbox" id="sPrintSygn"> Drukuj sygnaturę akt drobnym drukiem pod adresatem</label>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Opłaty domyślne</h2>
+      <p class="small muted" style="margin-top:-6px">Wpisz aktualne stawki z cennika – aplikacja podstawi je automatycznie wg rodzaju przesyłki (możesz je zawsze zmienić przy pozycji). Puste = kolumna „Opłata” zostaje do wpisania ręcznie.</p>
+      <div class="grid2">
+        <label class="f">Polecony ekonomiczny (zł)<input type="text" inputmode="decimal" id="fE" placeholder="np. 0,00"></label>
+        <label class="f">Polecony ekonomiczny + ZPO (zł)<input type="text" inputmode="decimal" id="fEZ"></label>
+        <label class="f">Polecony priorytet (zł)<input type="text" inputmode="decimal" id="fP"></label>
+        <label class="f">Polecony priorytet + ZPO (zł)<input type="text" inputmode="decimal" id="fPZ"></label>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Kopia zapasowa</h2>
+      <p class="small muted" style="margin-top:-6px">Dane są zapisane w tej przeglądarce na tym urządzeniu. Rób co jakiś czas kopię – i zawsze przed czyszczeniem przeglądarki.</p>
+      <div class="row">
+        <button class="btn" id="bExport">Pobierz kopię (.json)</button>
+        <label class="btn">Wczytaj kopię…<input type="file" id="bImport" accept=".json,application/json" hidden></label>
+        <label class="btn">Import adresów z CSV…<input type="file" id="bCsv" accept=".csv,text/csv" hidden></label>
+      </div>
+      <p class="small muted">CSV: kolumny <code>nazwa;nazwa2;ulica;kod;miasto;kategoria</code> (separator średnik lub przecinek, pierwszy wiersz to nagłówek).</p>
+    </div>
+  </section>
+</main>
+
+<div id="print"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================= storage ================= */
+const KEY='ksiazka-nadawcza-v1';
+const CATS=['Sąd','Komornik','Prokuratura','Urząd','Klient','Pełnomocnik','Inne'];
+const SEED=[
+ {name:'Sąd Apelacyjny w Poznaniu',name2:'',street:'ul. Stanisława Hejmowskiego 3',zip:'61-736',city:'Poznań',cat:'Sąd'},
+ {name:'Sąd Okręgowy w Poznaniu',name2:'',street:'ul. Stanisława Hejmowskiego 2',zip:'61-736',city:'Poznań',cat:'Sąd'},
+ {name:'Sąd Rejonowy Poznań-Stare Miasto w Poznaniu',name2:'',street:'ul. Młyńska 1a',zip:'61-729',city:'Poznań',cat:'Sąd'},
+ {name:'Sąd Rejonowy Poznań-Nowe Miasto i Wilda w Poznaniu',name2:'',street:'Al. Marcinkowskiego 32',zip:'61-745',city:'Poznań',cat:'Sąd'},
+ {name:'Sąd Rejonowy Poznań-Grunwald i Jeżyce w Poznaniu',name2:'',street:'ul. Kamiennogórska 26',zip:'60-179',city:'Poznań',cat:'Sąd'},
+ {name:'Wojewódzki Sąd Administracyjny w Poznaniu',name2:'',street:'ul. Ratajczaka 10/12',zip:'61-815',city:'Poznań',cat:'Sąd'},
+ {name:'Sąd Rejonowy w Gnieźnie',name2:'Wydział I Cywilny',street:'ul. Franciszkańska 10',zip:'62-200',city:'Gniezno',cat:'Sąd'},
+ {name:'Sąd Rejonowy Lublin-Zachód',name2:'Wydział VI Cywilny',street:'ul. Boczna Lubomelskiej 13',zip:'20-070',city:'Lublin',cat:'Sąd'},
+ {name:'Komornik Sądowy Marek Szych',name2:'',street:'ul. Czajcza 2/2',zip:'61-546',city:'Poznań',cat:'Komornik'},
+];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+
+function freshState(){
+  return {
+    contacts:SEED.map(c=>({id:uid(),...c,uses:0,last:null})),
+    batch:{id:uid(),date:today(),items:[]},
+    history:[],
+    settings:{sender:'Kancelaria Radcy Prawnego Michał Mejziński | 61-729 Poznań, ul. Młyńska 4/8',contract:'',
+      printSygn:false,fees:{E:'',EZ:'',P:'',PZ:''},defZpo:true,defP:false}
+  };
+}
+let S;
+function load(){
+  try{const raw=localStorage.getItem(KEY); S=raw?JSON.parse(raw):freshState();}
+  catch(e){S=freshState();}
+  S.settings=Object.assign(freshState().settings,S.settings||{});
+  if(!S.batch) S.batch={id:uid(),date:today(),items:[]};
+}
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));}
+  catch(e){toast('Nie udało się zapisać danych w przeglądarce!');}
+}
+
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/ł/g,'l');
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+function money(v){ // "12,50" -> 1250 groszy ; '' -> null
+  if(v===''||v==null) return null;
+  const n=parseFloat(String(v).replace(/\s/g,'').replace(',','.'));
+  return isNaN(n)?null:Math.round(n*100);
+}
+const fmtMoney=g=>g==null?'':(g/100).toFixed(2).replace('.',',');
+const splitZl=g=>g==null?['','']:[String(Math.floor(g/100)),String(g%100).padStart(2,'0')];
+function feeFor(it){
+  const f=S.settings.fees; const k=(it.prio?'P':'E')+(it.zpo?'Z':'');
+  return money(f[k]);
+}
+function addrLine(c){return [c.street,[c.zip,c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}
+
+/* ================= tabs ================= */
+document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('main>section').forEach(s=>s.hidden=s.id!=='tab-'+b.dataset.tab);
+  ({nadaj:renderBatch,adresy:renderAB,historia:renderHistory,ustawienia:renderSettings})[b.dataset.tab]();
+});
+
+/* ================= NADAJ ================= */
+const q=$('#q'), dd=$('#dd'); let ddItems=[], ddIdx=0;
+function searchContacts(term,limit=12){
+  const t=norm(term).split(/\s+/).filter(Boolean);
+  let list=S.contacts.filter(c=>{const h=norm([c.name,c.name2,c.street,c.city,c.zip,c.cat].join(' '));return t.every(w=>h.includes(w))});
+  list.sort((a,b)=>(b.uses-a.uses)||(b.last||'').localeCompare(a.last||'')||a.name.localeCompare(b.name,'pl'));
+  return list.slice(0,limit);
+}
+function renderDD(){
+  const term=q.value.trim();
+  if(!term){dd.hidden=true;return}
+  const res=searchContacts(term);
+  ddItems=[...res.map(c=>({c})),{new:true}];
+  ddIdx=0;
+  dd.innerHTML=ddItems.map((o,i)=>o.new
+    ?`<div class="opt new" data-i="${i}">+ Nowy adresat „${esc(term)}”…</div>`
+    :`<div class="opt" data-i="${i}"><b>${esc(o.c.name)}</b>${o.c.name2?' – '+esc(o.c.name2):''}<div class="addr">${esc(addrLine(o.c))} <span class="chip">${esc(o.c.cat)}</span></div></div>`).join('');
+  hl(); dd.hidden=false;
+}
+function hl(){dd.querySelectorAll('.opt').forEach((e,i)=>e.classList.toggle('hl',i===ddIdx))}
+function pickDD(i){
+  const o=ddItems[i]; if(!o) return;
+  if(o.new){openContact({name:q.value.trim()},c=>{addItem(c);});}
+  else addItem(o.c);
+  q.value='';dd.hidden=true;q.focus();
+}
+q.addEventListener('input',renderDD);
+q.addEventListener('keydown',e=>{
+  if(dd.hidden) return;
+  if(e.key==='ArrowDown'){ddIdx=Math.min(ddIdx+1,ddItems.length-1);hl();e.preventDefault()}
+  else if(e.key==='ArrowUp'){ddIdx=Math.max(ddIdx-1,0);hl();e.preventDefault()}
+  else if(e.key==='Enter'){pickDD(ddIdx);e.preventDefault()}
+  else if(e.key==='Escape'){dd.hidden=true}
+});
+dd.addEventListener('mousedown',e=>{const o=e.target.closest('.opt');if(o){e.preventDefault();pickDD(+o.dataset.i)}});
+q.addEventListener('blur',()=>setTimeout(()=>dd.hidden=true,150));
+
+function addItem(c){
+  const it={id:uid(),contactId:c.id||null,name:c.name,name2:c.name2||'',street:c.street||'',zip:c.zip||'',city:c.city||'',
+    zpo:$('#defZpo').checked,prio:$('#defP').checked,sygn:'',nr:'',masa:'',wartosc:'',pobranie:'',uwagi:'',fee:null,feeManual:false};
+  it.fee=feeFor(it);
+  S.batch.items.push(it);
+  const ct=S.contacts.find(x=>x.id===c.id); if(ct){ct.uses=(ct.uses||0)+1;ct.last=new Date().toISOString()}
+  save(); renderBatch();
+  toast('Dodano: '+c.name);
+}
+function renderBatch(){
+  $('#batchDate').value=S.batch.date||today();
+  $('#defZpo').checked=!!S.settings.defZpo; $('#defP').checked=!!S.settings.defP;
+  const its=S.batch.items, box=$('#items');
+  if(!its.length){box.innerHTML='<div class="empty">Brak pozycji. Zacznij pisać nazwę adresata w polu powyżej.</div>'}
+  else box.innerHTML=its.map((it,i)=>`
+   <div class="item ${i>0&&i%10===0?'pagebreak':''}" data-id="${it.id}">
+     <div class="lp">${i+1}.</div>
+     <div class="who"><b>${esc(it.name)}</b>${it.name2?`<div>${esc(it.name2)}</div>`:''}<div class="addr">${esc(addrLine(it))}</div></div>
+     <div class="ctl">
+       <label><input type="checkbox" data-k="zpo" ${it.zpo?'checked':''}> ZPO</label>
+       <label><input type="checkbox" data-k="prio" ${it.prio?'checked':''}> Priorytet</label>
+       <button class="btn sm" data-a="up" title="W górę" ${i===0?'disabled':''}>↑</button>
+       <button class="btn sm" data-a="edit" title="Popraw adres w tej pozycji">✎</button>
+       <button class="btn sm danger" data-a="del" title="Usuń">✕</button>
+     </div>
+     <div class="extra">
+       <input data-k="sygn" title="Sygnatura / sprawa" placeholder="Sygnatura / sprawa" value="${esc(it.sygn)}">
+       <input data-k="nr" title="Nr nadawczy" placeholder="Nr nadawczy" value="${esc(it.nr)}">
+       <input data-k="masa" title="Masa (g)" placeholder="Masa (g)" inputmode="numeric" value="${esc(it.masa)}">
+       <input data-k="fee" title="Opłata (zł)" placeholder="Opłata (zł)" inputmode="decimal" value="${esc(fmtMoney(it.fee))}">
+       <input data-k="uwagi" title="Uwagi (dodatkowo)" placeholder="Uwagi (dodatkowo)" value="${esc(it.uwagi)}">
+       <input data-k="wartosc" title="Zadekl. wartość (zł)" placeholder="Zadekl. wartość (zł)" inputmode="decimal" value="${esc(it.wartosc)}">
+       <input data-k="pobranie" title="Kwota pobrania (zł)" placeholder="Kwota pobrania (zł)" inputmode="decimal" value="${esc(it.pobranie)}">
+     </div>
+   </div>`).join('');
+  const zpo=its.filter(i=>i.zpo).length, fees=its.reduce((a,i)=>a+(i.fee||0),0);
+  const pages=Math.max(1,Math.ceil(its.length/10));
+  $('#batchSum').innerHTML=`<span>Pozycji: <b>${its.length}</b></span><span>ZPO: <b>${zpo}</b></span><span>Stron: <b>${its.length?pages:0}</b></span><span>Opłaty: <b>${fmtMoney(fees)||'0,00'} zł</b></span>`;
+  $('#hdrSender').textContent='';
+}
+$('#batchDate').onchange=e=>{S.batch.date=e.target.value;save()};
+$('#defZpo').onchange=e=>{S.settings.defZpo=e.target.checked;save()};
+$('#defP').onchange=e=>{S.settings.defP=e.target.checked;save()};
+$('#items').addEventListener('change',e=>{
+  const el=e.target, card=el.closest('.item'); if(!card||!el.dataset.k) return;
+  const it=S.batch.items.find(x=>x.id===card.dataset.id); const k=el.dataset.k;
+  if(el.type==='checkbox'){it[k]=el.checked; if(!it.feeManual) it.fee=feeFor(it); save(); renderBatch(); return}
+  if(k==='fee'){it.fee=money(el.value); it.feeManual=el.value!==''; if(!it.feeManual) it.fee=feeFor(it)}
+  else it[k]=el.value.trim();
+  save(); renderBatch();
+});
+$('#items').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return;
+  const id=b.closest('.item').dataset.id, arr=S.batch.items, i=arr.findIndex(x=>x.id===id);
+  if(b.dataset.a==='del'){arr.splice(i,1)}
+  else if(b.dataset.a==='up'&&i>0){[arr[i-1],arr[i]]=[arr[i],arr[i-1]]}
+  else if(b.dataset.a==='edit'){
+    const it=arr[i];
+    openContact({...it,id:null,cat:(S.contacts.find(c=>c.id===it.contactId)||{}).cat||'Inne'},c=>{
+      Object.assign(it,{name:c.name,name2:c.name2,street:c.street,zip:c.zip,city:c.city}); save(); renderBatch();
+    },{itemEdit:true,contactId:it.contactId});
+    return;
+  }
+  save(); renderBatch();
+});
+$('#btnClear').onclick=()=>{if(S.batch.items.length&&confirm('Usunąć wszystkie pozycje z bieżącej partii?')){S.batch.items=[];save();renderBatch()}};
+$('#btnPrint').onclick=()=>{if(!S.batch.items.length) return toast('Brak pozycji do druku');printBatch(S.batch)};
+$('#btnClose').onclick=()=>{
+  if(!S.batch.items.length) return toast('Partia jest pusta');
+  if(!confirm('Zamknąć partię z dnia '+S.batch.date+' i przenieść ją do historii?')) return;
+  S.history.unshift({...S.batch,closed:new Date().toISOString()});
+  S.batch={id:uid(),date:today(),items:[]}; save(); renderBatch(); toast('Partia zapisana w historii');
+};
+
+/* ================= PRINT ================= */
+function printBatch(b){
+  const per=10, its=b.items, pages=Math.max(1,Math.ceil(its.length/per));
+  let carry=0, html='';
+  for(let p=0;p<pages;p++){
+    const slice=its.slice(p*per,(p+1)*per);
+    let rows='';
+    for(let r=0;r<per;r++){
+      const it=slice[r], n=p*per+r+1;
+      if(!it){rows+=`<tr><td>${n}.</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;continue}
+      const [wz,wg]=splitZl(money(it.wartosc)), [fz,fg]=splitZl(it.fee), [pz,pg]=splitZl(money(it.pobranie));
+      const g=parseInt(it.masa,10); const kg=isNaN(g)?'':String(Math.floor(g/1000)), gr=isNaN(g)?'':String(g%1000);
+      const uw=[it.prio?'P':'',it.zpo?'ZPO':'',it.uwagi].filter(Boolean).join(' ');
+      carry+=it.fee||0;
+      rows+=`<tr><td>${n}.</td>
+        <td class="adr">${esc(it.name)}${it.name2?`<br><span class="n2">${esc(it.name2)}</span>`:''}${S.settings.printSygn&&it.sygn?`<br><span class="sg">${esc(it.sygn)}</span>`:''}</td>
+        <td class="dst">${esc(it.street)}<br>${esc(it.zip)} ${esc(it.city)}</td>
+        <td>${wz}</td><td>${wz?wg:''}</td><td>${kg}</td><td>${gr}</td>
+        <td>${esc(it.nr)}</td><td>${esc(uw)}</td>
+        <td>${fz}</td><td>${fz?fg:''}</td><td>${pz}</td><td>${pz?pg:''}</td></tr>`;
+    }
+    const [cz,cg]=carry?splitZl(carry):['',''];
+    html+=`<div class="pp">
+      <div class="head"><div class="snd">${esc(S.settings.sender)}</div><div class="umowa">${esc(S.settings.contract)}</div></div>
+      <table>
+        <colgroup>
+          <col style="width:4.88%"><col style="width:15.74%"><col style="width:12.09%"><col style="width:10.22%"><col style="width:4.53%">
+          <col style="width:9.43%"><col style="width:4.53%"><col style="width:10.58%"><col style="width:5.33%"><col style="width:7.20%">
+          <col style="width:4.00%"><col style="width:7.73%"><col style="width:3.64%">
+        </colgroup>
+        <thead>
+          <tr class="h1"><th rowspan="2">Lp.</th><th rowspan="2">ADRESAT<br><span style="font-weight:400">(imię i nazwisko lub nazwa)</span></th>
+            <th rowspan="2">Dokładne miejsce przeznaczenia (ulica, nr domu i mieszkania oraz placówka pocztowa)</th>
+            <th colspan="2">Kwota zadekl.wartości</th><th colspan="2">Masa</th><th rowspan="2">Nr nadawczy</th><th rowspan="2">Uwagi</th>
+            <th colspan="2">Opłata</th><th colspan="2">Kwota pobrania</th></tr>
+          <tr class="h2"><th>zł</th><th>gr</th><th>kg</th><th>g</th><th>zł</th><th>gr</th><th>zł</th><th>gr</th></tr>
+          <tr class="h3"><th>1</th><th>2</th><th>3</th><th colspan="2">4</th><th colspan="2">5</th><th>6</th><th>7</th><th colspan="2">8</th><th colspan="2">9</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td colspan="9" class="lbl">Nakład własny <span>do przeniesienia</span></td><td>${cz}</td><td>${cz?cg:''}</td><td class="nb" colspan="2"></td></tr></tfoot>
+      </table>
+      <div class="pgno">${b.date?('Data nadania: '+b.date.split('-').reverse().join('.')+' · '):''}str. ${p+1}/${pages}</div>
+    </div>`;
+  }
+  $('#print').innerHTML=html;
+  setTimeout(()=>window.print(),50);
+}
+
+/* ================= KONTAKT (modal) ================= */
+function openContact(c,onSave,opts={}){
+  const bg=document.createElement('div'); bg.className='modal-bg';
+  const isNew=!c.id&&!opts.itemEdit;
+  bg.innerHTML=`<div class="modal">
+    <h3>${opts.itemEdit?'Popraw adres w pozycji':(c.id?'Edytuj adresata':'Nowy adresat')}</h3>
+    <div class="grid2">
+      <label class="f full">Nazwa / imię i nazwisko<input type="text" id="mN" value="${esc(c.name)}"></label>
+      <label class="f full">Druga linia (np. wydział, „pełnomocnik pozwanego”)<input type="text" id="mN2" value="${esc(c.name2)}"></label>
+      <label class="f full">Ulica, nr domu i lokalu<input type="text" id="mS" value="${esc(c.street)}" placeholder="ul. Przykładowa 1/2"></label>
+      <label class="f">Kod pocztowy<input type="text" id="mZ" value="${esc(c.zip)}" placeholder="00-000" maxlength="6"></label>
+      <label class="f">Miejscowość<input type="text" id="mC" value="${esc(c.city)}"></label>
+      <label class="f">Kategoria<select id="mK">${CATS.map(k=>`<option ${k===(c.cat||'Klient')?'selected':''}>${k}</option>`).join('')}</select></label>
+      ${opts.itemEdit&&opts.contactId?`<label class="f" style="flex-direction:row;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="mUpd" checked> zaktualizuj też w książce adresowej</label>`:
+        (opts.itemEdit?`<label class="f" style="flex-direction:row;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="mAdd"> dodaj do książki adresowej</label>`:
+        (isNew?`<label class="f" style="flex-direction:row;gap:6px;align-items:center;color:var(--text)"><input type="checkbox" id="mAdd" checked> zapisz w książce adresowej</label>`:'<div></div>'))}
+    </div>
+    <div class="row" style="margin-top:16px;justify-content:flex-end">
+      <button class="btn" data-x>Anuluj</button><button class="btn primary" data-ok>Zapisz</button>
+    </div></div>`;
+  document.body.appendChild(bg);
+  const z=bg.querySelector('#mZ'); z.addEventListener('input',()=>{let v=z.value.replace(/\D/g,'').slice(0,5); if(v.length>2) v=v.slice(0,2)+'-'+v.slice(2); z.value=v});
+  setTimeout(()=>bg.querySelector(c.name?'#mS':'#mN').focus(),30);
+  const close=()=>bg.remove();
+  bg.querySelector('[data-x]').onclick=close;
+  bg.addEventListener('keydown',e=>{if(e.key==='Escape')close(); if(e.key==='Enter'&&e.target.tagName==='INPUT'&&e.target.type!=='checkbox') bg.querySelector('[data-ok]').click()});
+  bg.querySelector('[data-ok]').onclick=()=>{
+    const d={name:bg.querySelector('#mN').value.trim(),name2:bg.querySelector('#mN2').value.trim(),street:bg.querySelector('#mS').value.trim(),
+      zip:bg.querySelector('#mZ').value.trim(),city:bg.querySelector('#mC').value.trim(),cat:bg.querySelector('#mK').value};
+    if(!d.name) return toast('Podaj nazwę adresata');
+    if(!d.city) return toast('Podaj miejscowość');
+    if(d.zip&&!/^\d{2}-\d{3}$/.test(d.zip)) return toast('Kod pocztowy w formacie 00-000');
+    let result=d;
+    if(c.id&&!opts.itemEdit){ const ct=S.contacts.find(x=>x.id===c.id); Object.assign(ct,d); result=ct }
+    else if(opts.itemEdit){
+      const upd=bg.querySelector('#mUpd'), add=bg.querySelector('#mAdd');
+      if(upd&&upd.checked){const ct=S.contacts.find(x=>x.id===opts.contactId); if(ct) Object.assign(ct,d)}
+      if(add&&add.checked){S.contacts.push({id:uid(),...d,uses:1,last:new Date().toISOString()})}
+    }
+    else{
+      const add=bg.querySelector('#mAdd');
+      if(add&&add.checked){result={id:uid(),...d,uses:0,last:null};S.contacts.push(result)}
+    }
+    save(); close(); onSave&&onSave(result);
+  };
+}
+
+/* ================= KSIĄŻKA ADRESOWA ================= */
+$('#abCat').innerHTML+=CATS.map(k=>`<option>${k}</option>`).join('');
+function renderAB(){
+  const term=$('#abQ').value.trim(), cat=$('#abCat').value;
+  let list=term?searchContacts(term,10000):[...S.contacts].sort((a,b)=>a.name.localeCompare(b.name,'pl'));
+  if(cat) list=list.filter(c=>c.cat===cat);
+  $('#abList').innerHTML=list.length?list.map(c=>`<tr data-id="${c.id}">
+    <td><b>${esc(c.name)}</b>${c.name2?`<div class="small">${esc(c.name2)}</div>`:''}</td>
+    <td class="small">${esc(c.street)}<br>${esc(c.zip)} ${esc(c.city)}</td>
+    <td><span class="chip">${esc(c.cat)}</span></td><td class="small">${c.uses||0}</td>
+    <td style="white-space:nowrap;text-align:right">
+      <button class="btn sm" data-a="send" title="Dodaj do bieżącej partii">+ Nadaj</button>
+      <button class="btn sm" data-a="edit">✎</button>
+      <button class="btn sm danger" data-a="del">✕</button></td></tr>`).join('')
+    :'<tr><td colspan="5" class="empty">Brak wyników</td></tr>';
+}
+$('#abQ').oninput=renderAB; $('#abCat').onchange=renderAB;
+$('#abNew').onclick=()=>openContact({name:$('#abQ').value.trim()},()=>{renderAB();toast('Zapisano adresata')});
+$('#abList').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return;
+  const c=S.contacts.find(x=>x.id===b.closest('tr').dataset.id);
+  if(b.dataset.a==='edit') openContact(c,()=>renderAB());
+  if(b.dataset.a==='del'&&confirm('Usunąć „'+c.name+'” z książki adresowej?')){S.contacts=S.contacts.filter(x=>x!==c);save();renderAB()}
+  if(b.dataset.a==='send'){addItem(c);renderAB()}
+});
+
+/* ================= HISTORIA ================= */
+function renderHistory(){
+  const term=norm($('#hQ').value.trim());
+  const box=$('#hList');
+  const hs=S.history.filter(h=>!term||h.items.some(it=>norm([it.name,it.name2,it.city,it.sygn,it.nr].join(' ')).includes(term)));
+  if(!hs.length){box.innerHTML='<div class="card empty">Brak zamkniętych partii.</div>';return}
+  box.innerHTML=hs.map(h=>{
+    const its=term?h.items.filter(it=>norm([it.name,it.name2,it.city,it.sygn,it.nr].join(' ')).includes(term)):h.items;
+    return `<div class="card" data-id="${h.id}">
+      <div class="row"><h2 style="margin:0">${h.date.split('-').reverse().join('.')}</h2>
+        <span class="muted small">${h.items.length} poz. · ZPO: ${h.items.filter(i=>i.zpo).length}</span>
+        <div class="grow"></div>
+        <button class="btn sm" data-a="print">Drukuj ponownie</button>
+        <button class="btn sm" data-a="copy" title="Skopiuj adresatów do bieżącej partii">Powtórz wysyłkę</button>
+        <button class="btn sm danger" data-a="del">Usuń</button></div>
+      <table class="list" style="margin-top:8px"><tbody>${its.map(it=>`<tr>
+        <td style="width:40%"><b>${esc(it.name)}</b>${it.name2?' – '+esc(it.name2):''}<div class="small muted">${esc(addrLine(it))}</div></td>
+        <td class="small">${it.prio?'<span class="chip p">P</span>':''}${it.zpo?'<span class="chip zpo">ZPO</span>':''}</td>
+        <td class="small">${esc(it.sygn)}</td><td class="small">${esc(it.nr)}</td></tr>`).join('')}</tbody></table>
+    </div>`}).join('');
+}
+$('#hQ').oninput=renderHistory;
+$('#hList').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-a]'); if(!b) return;
+  const h=S.history.find(x=>x.id===b.closest('.card').dataset.id);
+  if(b.dataset.a==='print') printBatch(h);
+  if(b.dataset.a==='del'&&confirm('Usunąć partię z '+h.date+' z historii?')){S.history=S.history.filter(x=>x!==h);save();renderHistory()}
+  if(b.dataset.a==='copy'){
+    h.items.forEach(it=>S.batch.items.push({...it,id:uid(),nr:'',fee:it.feeManual?it.fee:feeFor(it)}));
+    save(); toast('Skopiowano '+h.items.length+' poz. do bieżącej partii');
+  }
+});
+
+/* ================= USTAWIENIA ================= */
+function renderSettings(){
+  const s=S.settings;
+  $('#sSender').value=s.sender; $('#sContract').value=s.contract; $('#sPrintSygn').checked=!!s.printSygn;
+  $('#fE').value=s.fees.E; $('#fEZ').value=s.fees.EZ; $('#fP').value=s.fees.P; $('#fPZ').value=s.fees.PZ;
+}
+[['#sSender','sender'],['#sContract','contract']].forEach(([sel,k])=>$(sel).onchange=e=>{S.settings[k]=e.target.value;save();toast('Zapisano')});
+$('#sPrintSygn').onchange=e=>{S.settings.printSygn=e.target.checked;save()};
+[['#fE','E'],['#fEZ','EZ'],['#fP','P'],['#fPZ','PZ']].forEach(([sel,k])=>$(sel).onchange=e=>{
+  S.settings.fees[k]=e.target.value.trim();
+  S.batch.items.forEach(it=>{if(!it.feeManual) it.fee=feeFor(it)});
+  save();toast('Zapisano stawkę');
+});
+$('#bExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='ksiazka-nadawcza-kopia-'+today()+'.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+};
+$('#bImport').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  f.text().then(t=>{
+    const d=JSON.parse(t); if(!d.contacts) throw 0;
+    if(!confirm('Zastąpić obecne dane danymi z kopii? ('+d.contacts.length+' adresatów, '+(d.history||[]).length+' partii)')) return;
+    const fr=freshState(); S=Object.assign(fr,d); S.settings=Object.assign(fr.settings,d.settings||{}); save(); renderBatch(); renderSettings(); toast('Wczytano kopię');
+  }).catch(()=>toast('To nie jest poprawny plik kopii')); e.target.value='';
+};
+$('#bCsv').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  f.text().then(t=>{
+    const lines=t.replace(/^﻿/,'').split(/\r?\n/).filter(l=>l.trim());
+    const sep=(lines[0].match(/;/g)||[]).length>=(lines[0].match(/,/g)||[]).length?';':',';
+    let n=0;
+    lines.slice(1).forEach(l=>{
+      const [name,name2,street,zip,city,cat]=l.split(sep).map(x=>(x||'').trim().replace(/^"|"$/g,''));
+      if(!name) return;
+      S.contacts.push({id:uid(),name,name2:name2||'',street:street||'',zip:zip||'',city:city||'',cat:CATS.includes(cat)?cat:'Inne',uses:0,last:null}); n++;
+    });
+    save(); toast('Zaimportowano '+n+' adresów');
+  }); e.target.value='';
+};
+
+/* ================= start ================= */
+load(); renderBatch(); q.focus();
+</script>
+</body>
+</html>
