@@ -105,32 +105,31 @@ table.list tr:hover td{background:#fafbfc}
 /* ============ PRINT: układ 1:1 z książką nadawczą ============ */
 #print{display:none}
 @media print{
-  @page{size:A4 landscape;margin:8mm 9mm}
+  @page{size:A4 landscape;margin:10mm 10mm}
   html,body{background:#fff}
   header.top,main,.toast,.modal-bg{display:none !important}
   #print{display:block}
   .pp{page-break-after:always;break-after:page;font-family:Arial,Helvetica,sans-serif;color:#000}
   .pp:last-child{page-break-after:auto;break-after:auto}
 }
-.pp{height:193mm;overflow:hidden}
-.pp .head{display:flex;justify-content:space-between;align-items:flex-end;height:9mm;margin-bottom:2.5mm}
-.pp .head .snd{font-size:8.5pt;font-weight:700;width:48%}
-.pp .head .umowa{font-size:8.5pt;font-weight:700;text-align:center;width:42%}
+.pp .head{display:flex;justify-content:space-between;align-items:flex-end;gap:10mm;height:7mm;margin-bottom:2mm}
+.pp .head .snd{font-size:9pt;font-weight:700;white-space:nowrap}
+.pp .head .umowa{font-size:8.5pt;font-weight:700;text-align:right;white-space:nowrap}
 .pp table{width:100%;border-collapse:collapse;table-layout:fixed}
 .pp td,.pp th{border:0.8pt solid #000;padding:0.6mm 1mm;font-size:7.5pt;text-align:center;vertical-align:middle;overflow:hidden}
 .pp th{font-weight:700}
-.pp thead tr.h1 th{height:15mm}
+.pp thead tr.h1 th{height:13mm}
 .pp thead tr.h2 th{height:4.5mm}
 .pp thead tr.h3 th{height:4mm}
-.pp tbody tr{height:13.2mm}
-.pp tbody td{height:13.2mm;max-height:13.2mm;line-height:1.2}
+.pp tbody tr{height:12mm}
+.pp tbody td{height:12mm;line-height:1.2}
 .pp tbody td.adr{font-size:8pt;line-height:1.25}
 .pp tbody td.adr .n2{font-size:7.5pt}
 .pp tbody td.adr .sg{font-size:6.5pt;color:#333}
 .pp tbody td.dst{font-size:8pt;line-height:1.25}
-.pp tfoot td{height:10mm;font-weight:700;font-size:7.5pt}
+.pp tfoot td{height:9mm;font-weight:700;font-size:7.5pt}
 .pp tfoot td.lbl{text-align:left}
-.pp tfoot td.lbl span{float:right;padding-right:18mm}
+.pp tfoot td.lbl span{float:right;padding-right:6mm}
 .pp tfoot td.nb{border:0}
 .pp .pgno{font-size:7pt;text-align:right;margin-top:1mm}
 </style>
@@ -158,11 +157,6 @@ table.list tr:hover td{background:#fafbfc}
       <div class="search-wrap">
         <input type="search" id="q" placeholder="Wpisz adresata: sąd, komornik, klient…  (Enter = dodaj)" autocomplete="off">
         <div class="dropdown" id="dd" hidden></div>
-      </div>
-      <div class="row small muted" style="margin-top:8px">
-        <span>Domyślny rodzaj nowej pozycji:</span>
-        <label style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="defZpo"> ZPO</label>
-        <label style="display:flex;gap:4px;align-items:center"><input type="checkbox" id="defP"> Priorytet</label>
       </div>
     </div>
 
@@ -217,9 +211,7 @@ table.list tr:hover td{background:#fafbfc}
       <p class="small muted" style="margin-top:-6px">Wpisz aktualne stawki z cennika – aplikacja podstawi je automatycznie wg rodzaju przesyłki (możesz je zawsze zmienić przy pozycji). Puste = kolumna „Opłata” zostaje do wpisania ręcznie.</p>
       <div class="grid2">
         <label class="f">Polecony ekonomiczny (zł)<input type="text" inputmode="decimal" id="fE" placeholder="np. 0,00"></label>
-        <label class="f">Polecony ekonomiczny + ZPO (zł)<input type="text" inputmode="decimal" id="fEZ"></label>
         <label class="f">Polecony priorytet (zł)<input type="text" inputmode="decimal" id="fP"></label>
-        <label class="f">Polecony priorytet + ZPO (zł)<input type="text" inputmode="decimal" id="fPZ"></label>
       </div>
     </div>
     <div class="card">
@@ -262,8 +254,8 @@ function freshState(){
     contacts:SEED.map(c=>({id:uid(),...c,uses:0,last:null})),
     batch:{id:uid(),date:today(),items:[]},
     history:[],
-    settings:{sender:'Kancelaria Radcy Prawnego Michał Mejziński | 61-729 Poznań, ul. Młyńska 4/8',contract:'',
-      printSygn:false,fees:{E:'',EZ:'',P:'',PZ:''},defZpo:true,defP:false}
+    settings:{sender:'Kancelaria Radcy Prawnego Michał Mejziński | 62-020 Swarzędz, ul. Nowy Świat 10A',contract:'',
+      printSygn:false,fees:{E:'',P:''}}
   };
 }
 let S;
@@ -272,6 +264,12 @@ function load(){
   catch(e){S=freshState();}
   S.settings=Object.assign(freshState().settings,S.settings||{});
   if(!S.batch) S.batch={id:uid(),date:today(),items:[]};
+  // migracja v2: nowy adres nadawcy, bez ZPO
+  if(!S.v2){
+    if(!S.settings.sender||S.settings.sender==='Kancelaria Radcy Prawnego Michał Mejziński | 61-729 Poznań, ul. Młyńska 4/8') S.settings.sender='Kancelaria Radcy Prawnego Michał Mejziński | 62-020 Swarzędz, ul. Nowy Świat 10A';
+    S.batch.items.forEach(it=>{it.zpo=false; if(!it.feeManual) it.fee=feeFor(it)});
+    S.v2=true; save();
+  }
 }
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify(S));}
@@ -291,7 +289,7 @@ function money(v){ // "12,50" -> 1250 groszy ; '' -> null
 const fmtMoney=g=>g==null?'':(g/100).toFixed(2).replace('.',',');
 const splitZl=g=>g==null?['','']:[String(Math.floor(g/100)),String(g%100).padStart(2,'0')];
 function feeFor(it){
-  const f=S.settings.fees; const k=(it.prio?'P':'E')+(it.zpo?'Z':'');
+  const f=S.settings.fees; const k=it.prio?'P':'E';
   return money(f[k]);
 }
 function addrLine(c){return [c.street,[c.zip,c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')}
@@ -342,7 +340,7 @@ q.addEventListener('blur',()=>setTimeout(()=>dd.hidden=true,150));
 
 function addItem(c){
   const it={id:uid(),contactId:c.id||null,name:c.name,name2:c.name2||'',street:c.street||'',zip:c.zip||'',city:c.city||'',
-    zpo:$('#defZpo').checked,prio:$('#defP').checked,sygn:'',nr:'',masa:'',wartosc:'',pobranie:'',uwagi:'',fee:null,feeManual:false};
+    zpo:false,prio:false,sygn:'',nr:'',masa:'',wartosc:'',pobranie:'',uwagi:'',fee:null,feeManual:false};
   it.fee=feeFor(it);
   S.batch.items.push(it);
   const ct=S.contacts.find(x=>x.id===c.id); if(ct){ct.uses=(ct.uses||0)+1;ct.last=new Date().toISOString()}
@@ -351,7 +349,6 @@ function addItem(c){
 }
 function renderBatch(){
   $('#batchDate').value=S.batch.date||today();
-  $('#defZpo').checked=!!S.settings.defZpo; $('#defP').checked=!!S.settings.defP;
   const its=S.batch.items, box=$('#items');
   if(!its.length){box.innerHTML='<div class="empty">Brak pozycji. Zacznij pisać nazwę adresata w polu powyżej.</div>'}
   else box.innerHTML=its.map((it,i)=>`
@@ -359,7 +356,6 @@ function renderBatch(){
      <div class="lp">${i+1}.</div>
      <div class="who"><b>${esc(it.name)}</b>${it.name2?`<div>${esc(it.name2)}</div>`:''}<div class="addr">${esc(addrLine(it))}</div></div>
      <div class="ctl">
-       <label><input type="checkbox" data-k="zpo" ${it.zpo?'checked':''}> ZPO</label>
        <label><input type="checkbox" data-k="prio" ${it.prio?'checked':''}> Priorytet</label>
        <button class="btn sm" data-a="up" title="W górę" ${i===0?'disabled':''}>↑</button>
        <button class="btn sm" data-a="edit" title="Popraw adres w tej pozycji">✎</button>
@@ -375,14 +371,12 @@ function renderBatch(){
        <input data-k="pobranie" title="Kwota pobrania (zł)" placeholder="Kwota pobrania (zł)" inputmode="decimal" value="${esc(it.pobranie)}">
      </div>
    </div>`).join('');
-  const zpo=its.filter(i=>i.zpo).length, fees=its.reduce((a,i)=>a+(i.fee||0),0);
+  const fees=its.reduce((a,i)=>a+(i.fee||0),0);
   const pages=Math.max(1,Math.ceil(its.length/10));
-  $('#batchSum').innerHTML=`<span>Pozycji: <b>${its.length}</b></span><span>ZPO: <b>${zpo}</b></span><span>Stron: <b>${its.length?pages:0}</b></span><span>Opłaty: <b>${fmtMoney(fees)||'0,00'} zł</b></span>`;
+  $('#batchSum').innerHTML=`<span>Pozycji: <b>${its.length}</b></span><span>Stron: <b>${its.length?pages:0}</b></span><span>Opłaty: <b>${fmtMoney(fees)||'0,00'} zł</b></span>`;
   $('#hdrSender').textContent='';
 }
 $('#batchDate').onchange=e=>{S.batch.date=e.target.value;save()};
-$('#defZpo').onchange=e=>{S.settings.defZpo=e.target.checked;save()};
-$('#defP').onchange=e=>{S.settings.defP=e.target.checked;save()};
 $('#items').addEventListener('change',e=>{
   const el=e.target, card=el.closest('.item'); if(!card||!el.dataset.k) return;
   const it=S.batch.items.find(x=>x.id===card.dataset.id); const k=el.dataset.k;
@@ -426,7 +420,7 @@ function printBatch(b){
       if(!it){rows+=`<tr><td>${n}.</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;continue}
       const [wz,wg]=splitZl(money(it.wartosc)), [fz,fg]=splitZl(it.fee), [pz,pg]=splitZl(money(it.pobranie));
       const g=parseInt(it.masa,10); const kg=isNaN(g)?'':String(Math.floor(g/1000)), gr=isNaN(g)?'':String(g%1000);
-      const uw=[it.prio?'P':'',it.zpo?'ZPO':'',it.uwagi].filter(Boolean).join(' ');
+      const uw=[it.prio?'P':'',it.uwagi].filter(Boolean).join(' ');
       carry+=it.fee||0;
       rows+=`<tr><td>${n}.</td>
         <td class="adr">${esc(it.name)}${it.name2?`<br><span class="n2">${esc(it.name2)}</span>`:''}${S.settings.printSygn&&it.sygn?`<br><span class="sg">${esc(it.sygn)}</span>`:''}</td>
@@ -440,14 +434,14 @@ function printBatch(b){
       <div class="head"><div class="snd">${esc(S.settings.sender)}</div><div class="umowa">${esc(S.settings.contract)}</div></div>
       <table>
         <colgroup>
-          <col style="width:4.88%"><col style="width:15.74%"><col style="width:12.09%"><col style="width:10.22%"><col style="width:4.53%">
-          <col style="width:9.43%"><col style="width:4.53%"><col style="width:10.58%"><col style="width:5.33%"><col style="width:7.20%">
-          <col style="width:4.00%"><col style="width:7.73%"><col style="width:3.64%">
+          <col style="width:3.2%"><col style="width:22.0%"><col style="width:24.0%"><col style="width:4.6%"><col style="width:2.9%">
+          <col style="width:3.6%"><col style="width:3.6%"><col style="width:12.6%"><col style="width:5.0%"><col style="width:5.7%">
+          <col style="width:3.2%"><col style="width:6.4%"><col style="width:3.2%">
         </colgroup>
         <thead>
           <tr class="h1"><th rowspan="2">Lp.</th><th rowspan="2">ADRESAT<br><span style="font-weight:400">(imię i nazwisko lub nazwa)</span></th>
             <th rowspan="2">Dokładne miejsce przeznaczenia (ulica, nr domu i mieszkania oraz placówka pocztowa)</th>
-            <th colspan="2">Kwota zadekl.wartości</th><th colspan="2">Masa</th><th rowspan="2">Nr nadawczy</th><th rowspan="2">Uwagi</th>
+            <th colspan="2" style="font-size:6.5pt">Kwota zadekl. wartości</th><th colspan="2">Masa</th><th rowspan="2">Nr nadawczy</th><th rowspan="2">Uwagi</th>
             <th colspan="2">Opłata</th><th colspan="2">Kwota pobrania</th></tr>
           <tr class="h2"><th>zł</th><th>gr</th><th>kg</th><th>g</th><th>zł</th><th>gr</th><th>zł</th><th>gr</th></tr>
           <tr class="h3"><th>1</th><th>2</th><th>3</th><th colspan="2">4</th><th colspan="2">5</th><th>6</th><th>7</th><th colspan="2">8</th><th colspan="2">9</th></tr>
@@ -545,14 +539,14 @@ function renderHistory(){
     const its=term?h.items.filter(it=>norm([it.name,it.name2,it.city,it.sygn,it.nr].join(' ')).includes(term)):h.items;
     return `<div class="card" data-id="${h.id}">
       <div class="row"><h2 style="margin:0">${h.date.split('-').reverse().join('.')}</h2>
-        <span class="muted small">${h.items.length} poz. · ZPO: ${h.items.filter(i=>i.zpo).length}</span>
+        <span class="muted small">${h.items.length} poz.</span>
         <div class="grow"></div>
         <button class="btn sm" data-a="print">Drukuj ponownie</button>
         <button class="btn sm" data-a="copy" title="Skopiuj adresatów do bieżącej partii">Powtórz wysyłkę</button>
         <button class="btn sm danger" data-a="del">Usuń</button></div>
       <table class="list" style="margin-top:8px"><tbody>${its.map(it=>`<tr>
         <td style="width:40%"><b>${esc(it.name)}</b>${it.name2?' – '+esc(it.name2):''}<div class="small muted">${esc(addrLine(it))}</div></td>
-        <td class="small">${it.prio?'<span class="chip p">P</span>':''}${it.zpo?'<span class="chip zpo">ZPO</span>':''}</td>
+        <td class="small">${it.prio?'<span class="chip p">P</span>':''}</td>
         <td class="small">${esc(it.sygn)}</td><td class="small">${esc(it.nr)}</td></tr>`).join('')}</tbody></table>
     </div>`}).join('');
 }
@@ -572,11 +566,11 @@ $('#hList').addEventListener('click',e=>{
 function renderSettings(){
   const s=S.settings;
   $('#sSender').value=s.sender; $('#sContract').value=s.contract; $('#sPrintSygn').checked=!!s.printSygn;
-  $('#fE').value=s.fees.E; $('#fEZ').value=s.fees.EZ; $('#fP').value=s.fees.P; $('#fPZ').value=s.fees.PZ;
+  $('#fE').value=s.fees.E||''; $('#fP').value=s.fees.P||'';
 }
 [['#sSender','sender'],['#sContract','contract']].forEach(([sel,k])=>$(sel).onchange=e=>{S.settings[k]=e.target.value;save();toast('Zapisano')});
 $('#sPrintSygn').onchange=e=>{S.settings.printSygn=e.target.checked;save()};
-[['#fE','E'],['#fEZ','EZ'],['#fP','P'],['#fPZ','PZ']].forEach(([sel,k])=>$(sel).onchange=e=>{
+[['#fE','E'],['#fP','P']].forEach(([sel,k])=>$(sel).onchange=e=>{
   S.settings.fees[k]=e.target.value.trim();
   S.batch.items.forEach(it=>{if(!it.feeManual) it.fee=feeFor(it)});
   save();toast('Zapisano stawkę');
